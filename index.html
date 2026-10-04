@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Riwayat Aplikasi iLoan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: search bar on top -> summary strip -> 4 stacked sections (one per table), wide tables scroll inside their own card */
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --surface-2:#eef2f5; --line:#d9e0e6;
+  --fg:#17212b; --muted:#5b6b7a; --accent:#0f5d7a; --accent-soft:#e1eff4;
+  --ok:#1f7a4d; --ok-soft:#e3f3ea; --warn:#9a6200; --warn-soft:#fbf0d9; --bad:#b3261e; --bad-soft:#fbe5e3;
+  --mock:#7a4a00; --mock-bg:#fff4dc;
+  --f-body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f151b; --surface:#16202a; --surface-2:#1c2833; --line:#2a3946;
+  --fg:#e3eaf0; --muted:#93a4b3; --accent:#5fb4d4; --accent-soft:#18323e;
+  --ok:#5cc58f; --ok-soft:#163327; --warn:#e2ad4f; --warn-soft:#3a2c12; --bad:#f08a80; --bad-soft:#3d1c1a;
+  --mock:#f0c46c; --mock-bg:#33280f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f151b; --surface:#16202a; --surface-2:#1c2833; --line:#2a3946;
+  --fg:#e3eaf0; --muted:#93a4b3; --accent:#5fb4d4; --accent-soft:#18323e;
+  --ok:#5cc58f; --ok-soft:#163327; --warn:#e2ad4f; --warn-soft:#3a2c12; --bad:#f08a80; --bad-soft:#3d1c1a;
+  --mock:#f0c46c; --mock-bg:#33280f; color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding-inline:16px;padding-block:20px 48px;display:flex;flex-direction:column;gap:18px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.mockbar{background:var(--mock-bg);color:var(--mock);border:1px dashed currentColor;border-radius:6px;padding:8px 12px;font-size:12.5px}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{margin:0;font-size:22px;font-weight:700;letter-spacing:-.01em;text-wrap:balance}
+.sub{color:var(--muted);font-size:13px;margin:2px 0 0}
+.search{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.search form{display:flex;flex-wrap:wrap;gap:8px}
+.search label{font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);width:100%}
+.search input{flex:1 1 260px;min-width:0;font:500 16px var(--f-mono);padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);letter-spacing:.03em}
+.search input:focus{outline:2px solid var(--accent);outline-offset:1px}
+button{font:inherit;cursor:pointer}
+.btn{background:var(--accent);color:var(--surface);border:0;border-radius:6px;padding:10px 18px;font-weight:600}
+.btn:focus-visible,.chip:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.samples{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12.5px;color:var(--muted)}
+.chip{background:var(--surface-2);border:1px solid var(--line);color:var(--fg);border-radius:999px;padding:3px 10px;font:12px var(--f-mono)}
+.chip:hover{border-color:var(--accent)}
+.err{color:var(--bad);font-size:13px}
+
+.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.tile{background:var(--surface);padding:12px 14px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.tile .k{font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+#result{display:flex;flex-direction:column;gap:12px}
+.tile .v.mono{font-size:15px}
+.tile .v{font-size:17px;font-weight:600;overflow-wrap:anywhere}
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12.5px;font-weight:700;letter-spacing:.02em;width:fit-content}
+.p-ok{background:var(--ok-soft);color:var(--ok)} .p-warn{background:var(--warn-soft);color:var(--warn)}
+.p-bad{background:var(--bad-soft);color:var(--bad)} .p-none{background:var(--surface-2);color:var(--muted)}
+
+nav.jump{display:flex;flex-wrap:wrap;gap:6px}
+nav.jump a{font-size:12.5px;color:var(--accent);text-decoration:none;border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:4px 10px}
+nav.jump a:hover{border-color:var(--accent)}
+nav.jump .n{color:var(--muted);margin-left:4px}
+
+section.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;min-width:0}
+.card-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 12px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.card-h h2{margin:0;font-size:15px;font-weight:700}
+.card-h .tbl{font:12px var(--f-mono);color:var(--muted)}
+.card-h .cnt{font-size:12.5px;color:var(--muted)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:8px 12px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--line)}
+th{font-size:11.5px;font-weight:600;letter-spacing:.03em;color:var(--muted);background:var(--surface-2);position:sticky;top:0}
+td.num,th.num{text-align:right}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:var(--accent-soft)}
+td.null{color:var(--muted);font-style:italic}
+.empty{padding:22px 14px;color:var(--muted);font-size:13.5px}
+.empty b{color:var(--fg)}
+.kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px 20px;padding:14px}
+.kv div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.kv .k{font:11.5px var(--f-mono);color:var(--muted)}
+.kv .v{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.dur{color:var(--muted)}
+.dur.slow{color:var(--warn);font-weight:600}
+.code{font:500 12.5px var(--f-mono);background:var(--surface-2);border-radius:4px;padding:1px 6px}
+.note{font-size:12px;color:var(--muted);padding:0 14px 12px}
+.src{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.src-h{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px}
+.src-h .lbl{font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.mode{font-size:12.5px;font-weight:600;padding:2px 10px;border-radius:999px;background:var(--surface-2);color:var(--muted)}
+.mode.live{background:var(--ok-soft);color:var(--ok)}
+.drop{border:1.5px dashed var(--line);border-radius:8px;padding:16px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;background:var(--bg);cursor:pointer}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop:focus-within{outline:2px solid var(--accent);outline-offset:1px}
+.drop p{margin:0;font-size:13px;color:var(--muted);flex:1 1 240px;min-width:0}
+.drop p b{color:var(--fg)}
+.btn-ghost{background:var(--surface);color:var(--accent);border:1px solid var(--line);border-radius:6px;padding:7px 14px;font-weight:600}
+.btn-ghost:hover{border-color:var(--accent)}
+.btn-ghost:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.tstat{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.ts{border:1px solid var(--line);border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.ts .t{font:12px var(--f-mono);color:var(--muted);overflow-wrap:anywhere}
+.ts .r{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+.ts .r.none{color:var(--muted);font-weight:400}
+.ts .fn{font-size:11.5px;color:var(--muted);overflow-wrap:anywhere}
+.prog{height:4px;background:var(--surface-2);border-radius:2px;overflow:hidden}
+.prog i{display:block;height:100%;width:0;background:var(--accent)}
+.hint{font-size:12px;color:var(--muted);margin:0}
+.warnbox{font-size:12.5px;color:var(--warn)}
+@media (prefers-reduced-motion:no-preference){#result{transition:opacity .15s}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>Riwayat Aplikasi iLoan</h1>
+      <p class="sub">Cari 1 nomor aplikasi, tampilkan DE Final Approval, Track, Risk, dan Approval History.</p>
+    </div>
+  </header>
+
+  <div class="src" id="src">
+    <div class="src-h">
+      <span class="lbl">Sumber data</span>
+      <span class="mode" id="mode">Belum ada data</span>
+    </div>
+    <label class="drop" id="drop" for="files">
+      <p><b>Tarik 4 file CSV ke sini</b> atau klik untuk pilih file. Hasil dari <span class="mono">bulk_query_aplikasi.py</span>: APP_DE_FINAL_APPROVAL, TRACKHISTORY, RISKHISTORY, APPROVALHISTORY (file _part2, _part3 boleh ikut).</p>
+      <span class="btn-ghost" aria-hidden="true">Pilih file</span>
+      <input id="files" type="file" accept=".csv,text/csv" multiple hidden>
+    </label>
+    <div class="prog" id="prog" hidden><i id="progbar"></i></div>
+    <div class="tstat" id="tstat" hidden></div>
+    <div id="srcmsg" class="warnbox" role="status"></div>
+    <div class="src-h" id="srcfoot" hidden>
+      <p class="hint">File dibaca di browser ini saja dan tidak dikirim ke server. Data hilang kalau halaman ditutup.</p>
+      <button class="btn-ghost" id="reset" type="button">Hapus data upload</button>
+    </div>
+  </div>
+
+  <div class="search">
+    <form id="f" autocomplete="off">
+      <label for="q">Nomor aplikasi (AP_REGNO)</label>
+      <input id="q" name="q" inputmode="numeric" maxlength="19" placeholder="19 digit AP_REGNO" value="">
+      <button class="btn" type="submit">Cari</button>
+    </form>
+    <div id="msg" class="err" role="alert"></div>
+  </div>
+
+  <div id="result"></div>
+</div>
+
+<script>
+// ---------- DATA CONTOH (fiktif) ----------
+const D = {};
+const COLS = {
+  track:["TH_SEQ","TR_CODE","TR_DATE","TR_BY","LASTTR_DATE","LASTTR_BY","TRACK_TPL","SG_GRPNAME"],
+  risk:["RH_SEQ","RH_BY","RH_DATE","DEC_TYPE"],
+  appr:["AH_SEQ","AH_BY","AH_DATE","DEC_TYPE","AN_SEQ","AH_FWDTO","MOBILE","CP_LIMIT","CP_TENOR","INT_TYPE","CP_INTEREST","CP_INSTALLMENT","CP_LTV","CP_RPC","PUM_CP_LIMIT","PUM_CP_TENOR","PUM_INT_TYPE","PUM_CP_INTEREST","PUM_CP_INSTALLMENT","DEC_BY"]
+};
+const MONEY = new Set(["CP_LIMIT","CP_INSTALLMENT","CP_RPC","PUM_CP_LIMIT","PUM_CP_INSTALLMENT","de_plafond","de_angsuran","de_rpc"]);
+const DECIMAL = new Set(["CP_INTEREST","PUM_CP_INTEREST","CP_LTV","de_interest","de_ltv"]);
+const DATES = new Set(["TR_DATE","LASTTR_DATE","RH_DATE","AH_DATE"]);
+
+// ---------- format ----------
+const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pd = s => new Date(s.replace(" ","T"));
+function fDate(s){ const d=pd(s); return `${String(d.getDate()).padStart(2,"0")}-${MON[d.getMonth()]}-${d.getFullYear()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; }
+const fNum = (v,dec) => Number(v).toLocaleString("id-ID",{minimumFractionDigits:dec?1:0,maximumFractionDigits:dec?2:0});
+function fDur(ms){ const m=Math.round(ms/60000); if(m<60) return m+" mnt"; const h=Math.floor(m/60); if(h<24) return h+" jam "+(m%60)+" mnt"; return Math.floor(h/24)+" hr "+(h%24)+" jam"; }
+function cell(col,v){
+  if(v===null||v===undefined||v==="") return `<td class="null">NULL</td>`;
+  if(DATES.has(col)) return `<td class="mono">${fDate(v)}</td>`;
+  if(MONEY.has(col)) return `<td class="num mono">${fNum(v)}</td>`;
+  if(DECIMAL.has(col)) return `<td class="num mono">${fNum(v,true)}</td>`;
+  if(col==="DEC_TYPE") return `<td><span class="code">${esc(v)}</span></td>`;
+  if(col==="MOBILE") return `<td>${v?"Ya":"Tidak"}</td>`;
+  if(typeof v==="number") return `<td class="num mono">${v}</td>`;
+  return `<td class="mono">${esc(v)}</td>`;
+}
+function recPill(r){
+  if(!r) return `<span class="pill p-none">Belum ada DE</span>`;
+  const c = r==="PASS"?"p-ok":r==="REJECT"?"p-bad":"p-warn";
+  return `<span class="pill ${c}">${esc(r)}</span>`;
+}
+function card(id,title,tbl,count,body,note){
+  return `<section class="card" id="${id}"><div class="card-h"><h2>${title}</h2><span class="tbl">${tbl}</span><span class="cnt">${count}</span></div>${body}${note||""}</section>`;
+}
+const empty = (tbl,reg) => `<div class="empty"><b>Tidak ada data.</b> <span class="mono">${tbl}</span> tidak punya baris untuk ${reg}.</div>`;
+function table(cols,rows,extra){
+  const head = cols.map(c=>`<th class="${MONEY.has(c)||DECIMAL.has(c)?"num":""}">${c}</th>`).join("") + (extra?`<th>${extra.h}</th>`:"");
+  const body = rows.map((r,i)=>`<tr>${r.map((v,j)=>cell(cols[j],v)).join("")}${extra?extra.td(r,i):""}</tr>`).join("");
+  return `<div class="scroll"><table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div>`;
+}
+
+// ---------- upload & parse ----------
+const TBL = {
+  de:   {name:"APP_DE_FINAL_APPROVAL", key:"recommendation"},
+  track:{name:"TRACKHISTORY",          key:"TH_SEQ"},
+  risk: {name:"RISKHISTORY",           key:"RH_SEQ"},
+  appr: {name:"APPROVALHISTORY",       key:"AH_SEQ"}
+};
+const INTS = new Set(["TH_SEQ","RH_SEQ","AH_SEQ","AN_SEQ","MOBILE","CP_TENOR","PUM_CP_TENOR","de_tenor"]);
+const S = {mode:"sample", data:{de:new Map(),track:new Map(),risk:new Map(),appr:new Map()},
+           rows:{de:0,track:0,risk:0,appr:0}, files:{de:[],track:[],risk:[],appr:[]}, seen:new Set(), firstReg:null};
+
+function splitLine(line){
+  if(line.indexOf('"')<0) return line.split(";");
+  const out=[]; let cur="", q=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(q){ if(c==='"'){ if(line[i+1]==='"'){cur+='"';i++;} else q=false; } else cur+=c; }
+    else if(c==='"') q=true; else if(c===";"){ out.push(cur); cur=""; } else cur+=c;
+  }
+  out.push(cur); return out;
+}
+function conv(col,v){
+  if(v===undefined||v==="") return null;
+  v=v.trim(); if(v==="") return null;
+  if(INTS.has(col)||MONEY.has(col)||DECIMAL.has(col)){ const n=Number(v.replace(",",".")); return isNaN(n)?v:n; }
+  return v;
+}
+function detect(header){
+  const h=header.map(x=>x.trim());
+  for(const k of Object.keys(TBL)) if(h.includes(TBL[k].key)) return k;
+  return null;
+}
+async function loadFile(file, onProg){
+  const reader=file.stream().getReader(), dec=new TextDecoder("utf-8");
+  let buf="", header=null, kind=null, idx=null, done=0, n=0;
+  const handle = line => {
+    if(line.endsWith("\r")) line=line.slice(0,-1);
+    if(!line) return;
+    if(!header){
+      header=splitLine(line.replace(/^﻿/,"")).map(x=>x.trim());
+      kind=detect(header);
+      if(!kind) throw new Error(`${file.name}: kolom tidak dikenali. Pastikan file hasil bulk_query_aplikasi.py (delimiter ;).`);
+      const ki=header.indexOf("AP_REGNO");
+      if(ki<0) throw new Error(`${file.name}: kolom AP_REGNO tidak ada.`);
+      idx={ki, cols: kind==="de" ? header.map((c,i)=>[c,i]) : COLS[kind].map(c=>header.indexOf(c))};
+      return;
+    }
+    const f=splitLine(line), reg=(f[idx.ki]||"").trim();
+    if(!reg) return;
+    let rec;
+    if(kind==="de"){ rec={}; for(const [c,i] of idx.cols) rec[c]=conv(c,f[i]); }
+    else rec=COLS[kind].map((c,j)=> idx.cols[j]<0?null:conv(c,f[idx.cols[j]]));
+    const m=S.data[kind]; let arr=m.get(reg); if(!arr){arr=[];m.set(reg,arr);} arr.push(rec);
+    if(!S.firstReg) S.firstReg=reg;
+    n++;
+  };
+  for(;;){
+    const {value,done:end}=await reader.read();
+    if(end) break;
+    done+=value.length; buf+=dec.decode(value,{stream:true});
+    let p; while((p=buf.indexOf("\n"))>=0){ handle(buf.slice(0,p)); buf=buf.slice(p+1); }
+    onProg(done);
+  }
+  buf+=dec.decode(); if(buf) handle(buf);
+  if(!header) throw new Error(`${file.name}: file kosong.`);
+  return {kind,n};
+}
+async function addFiles(list){
+  const files=[...list].filter(f=>/\.csv$/i.test(f.name));
+  const smsg=document.getElementById("srcmsg"); smsg.textContent="";
+  if(!files.length){ smsg.textContent="Tidak ada file .csv yang dipilih."; return; }
+  const total=files.reduce((t,f)=>t+f.size,0); let base=0;
+  const prog=document.getElementById("prog"), bar=document.getElementById("progbar");
+  prog.hidden=false; bar.style.width="0";
+  const errs=[];
+  for(const f of files){
+    const id=f.name+"|"+f.size;
+    if(S.seen.has(id)){ errs.push(`${f.name}: sudah pernah di-upload, dilewati.`); base+=f.size; continue; }
+    try{
+      const r=await loadFile(f, d=>{ bar.style.width=Math.min(100,(base+d)/total*100)+"%"; });
+      S.seen.add(id); S.rows[r.kind]+=r.n; S.files[r.kind].push(f.name); S.mode="upload";
+    }catch(e){ errs.push(e.message); }
+    base+=f.size;
+  }
+  bar.style.width="100%"; setTimeout(()=>{prog.hidden=true;},400);
+  // urutkan per seq
+  for(const k of ["track","risk","appr"]) for(const arr of S.data[k].values()) arr.sort((x,y)=>(x[0]??0)-(y[0]??0));
+  smsg.textContent=errs.join(" ");
+  paintStatus();
+  const q=document.getElementById("q"), cur=q.value.trim();
+  if(S.mode==="upload" && !getApp(cur) && S.firstReg){ q.value=S.firstReg; }
+  render(q.value.trim());
+}
+function paintStatus(){
+  const up=S.mode==="upload";
+  const mode=document.getElementById("mode");
+  mode.textContent= up ? "File upload" : "Belum ada data"; mode.className="mode"+(up?" live":"");
+  document.getElementById("tstat").hidden=!up; document.getElementById("srcfoot").hidden=!up;
+  if(!up) return;
+  document.getElementById("tstat").innerHTML=Object.keys(TBL).map(k=>{
+    const ok=S.files[k].length>0;
+    return `<div class="ts"><span class="t">${TBL[k].name}</span>
+      <span class="r ${ok?"":"none"}">${ok?S.rows[k].toLocaleString("id-ID")+" baris · "+S.data[k].size.toLocaleString("id-ID")+" aplikasi":"Belum di-upload"}</span>
+      ${ok?`<span class="fn">${S.files[k].map(esc).join(", ")}</span>`:""}</div>`;}).join("");
+}
+function resetUpload(){
+  for(const k of Object.keys(TBL)){ S.data[k]=new Map(); S.rows[k]=0; S.files[k]=[]; }
+  S.seen=new Set(); S.firstReg=null; S.mode="sample";
+  document.getElementById("srcmsg").textContent=""; document.getElementById("files").value="";
+  paintStatus(); document.getElementById("q").value=""; render("0009920260901000001");
+}
+function getApp(reg){
+  if(S.mode==="sample"){ const a=D[reg]; return a?{...a,deCount:a.de?1:0,loaded:{de:1,track:1,risk:1,appr:1}}:null; }
+  const g=k=>S.data[k].get(reg)||[];
+  const de=g("de"), a={de:de[0]||null, deCount:de.length, track:g("track"), risk:g("risk"), appr:g("appr"),
+    loaded:{de:S.files.de.length, track:S.files.track.length, risk:S.files.risk.length, appr:S.files.appr.length}};
+  return (a.deCount||a.track.length||a.risk.length||a.appr.length)?a:null;
+}
+
+// ---------- render ----------
+const notLoaded = tbl => `<div class="empty"><b>File belum di-upload.</b> Upload <span class="mono">${tbl}_part*.csv</span> untuk melihat bagian ini.</div>`;
+function render(reg){
+  const out = document.getElementById("result"), msg = document.getElementById("msg");
+  msg.textContent = "";
+  if(!/^\d{19}$/.test(reg)){ msg.textContent = "Nomor aplikasi harus 19 digit angka."; return; }
+  if(S.mode!=="upload"){ showIdle("Upload file CSV dulu sebelum mencari."); return; }
+  const a = getApp(reg);
+  if(!a){ out.innerHTML = `<section class="card">${empty(S.mode==="upload"?"File yang di-upload":"4 tabel", reg)}</section>`; return; }
+
+  const last = a.track[a.track.length-1], first = a.track[0];
+  const leadMs = last && first && last[2] && first[4] ? pd(last[2]) - pd(first[4]) : null;
+  const lastAppr = a.appr[a.appr.length-1];
+
+  const summary = `<div class="summary">
+    <div class="tile"><span class="k">AP_REGNO</span><span class="v mono">${reg}</span></div>
+    <div class="tile"><span class="k">Rekomendasi DE</span>${recPill(a.de&&a.de.recommendation)}</div>
+    <div class="tile"><span class="k">Posisi terakhir</span><span class="v">${last?`<span class="code">${esc(last[1]??"-")}</span> <span class="mono" style="font-size:13px;color:var(--muted)">${last[2]?fDate(last[2]):""}</span>`:"—"}</span></div>
+    <div class="tile"><span class="k">Lama proses (track)</span><span class="v">${leadMs!==null?fDur(leadMs):"—"}</span></div>
+    <div class="tile"><span class="k">Approval / Risk</span><span class="v">${a.appr.length} / ${a.risk.length} langkah</span></div>
+    <div class="tile"><span class="k">Approver terakhir</span><span class="v mono">${lastAppr&&lastAppr[1]?esc(lastAppr[1]):"—"}</span></div>
+  </div>`;
+
+  const jump = `<nav class="jump" aria-label="Lompat ke tabel">
+    <a href="#s-de">DE Final Approval<span class="n">${a.deCount}</span></a>
+    <a href="#s-track">Track History<span class="n">${a.track.length}</span></a>
+    <a href="#s-risk">Risk History<span class="n">${a.risk.length}</span></a>
+    <a href="#s-appr">Approval History<span class="n">${a.appr.length}</span></a></nav>`;
+
+  const deBody = !a.loaded.de ? notLoaded("APP_DE_FINAL_APPROVAL") : a.de ? `<div class="kv">${Object.entries(a.de).filter(([k])=>k!=="AP_REGNO").map(([k,v])=>{
+      let val = v===null?`<span style="color:var(--muted);font-style:italic;font-weight:400">NULL</span>`
+        : k==="recommendation"?recPill(v)
+        : MONEY.has(k)&&typeof v==="number"?fNum(v) : DECIMAL.has(k)&&typeof v==="number"?fNum(v,true) : esc(v);
+      return `<div><span class="k">${esc(k)}</span><span class="v">${val}</span></div>`;}).join("")}</div>` : empty("APP_DE_FINAL_APPROVAL",reg);
+
+  const trackBody = !a.loaded.track ? notLoaded("TRACKHISTORY") : a.track.length ? table(COLS.track, a.track, {h:"DURASI DI TAHAP", td:r=>{
+      if(!r[2]||!r[4]) return `<td class="dur">—</td>`;
+      const ms = pd(r[2])-pd(r[4]); return `<td class="dur ${ms>86400000?"slow":""}">${fDur(ms)}</td>`; }}) : empty("TRACKHISTORY",reg);
+
+  const sec = (k,tbl) => !a.loaded[k] ? notLoaded(tbl) : a[k].length ? table(COLS[k],a[k]) : empty(tbl,reg);
+
+  out.innerHTML = summary + jump +
+    card("s-de","DE Final Approval","APP_DE_FINAL_APPROVAL", a.deCount+" baris", deBody,
+      a.deCount>1?`<p class="note">Ada ${a.deCount} baris untuk aplikasi ini; yang ditampilkan baris pertama.</p>`:"") +
+    card("s-track","Track History","TRACKHISTORY", a.track.length+" baris", trackBody,
+      a.track.length?`<p class="note">Durasi = TR_DATE − LASTTR_DATE. Ditandai kuning kalau lebih dari 1 hari.</p>`:"") +
+    card("s-risk","Risk History","RISKHISTORY", a.risk.length+" baris", sec("risk","RISKHISTORY")) +
+    card("s-appr","Approval History","APPROVALHISTORY", a.appr.length+" baris", sec("appr","APPROVALHISTORY"),
+      a.appr.length?`<p class="note">Geser tabel ke kanan untuk kolom CP_* dan PUM_*.</p>`:"");
+}
+
+document.getElementById("f").addEventListener("submit", e => { e.preventDefault(); render(document.getElementById("q").value.trim()); });
+const drop=document.getElementById("drop"), fin=document.getElementById("files");
+fin.addEventListener("change", ()=>{ if(fin.files.length) addFiles(fin.files); });
+["dragenter","dragover"].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.add("over");}));
+["dragleave","drop"].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.remove("over");}));
+drop.addEventListener("drop", e=>{ if(e.dataTransfer.files.length) addFiles(e.dataTransfer.files); });
+document.getElementById("reset").addEventListener("click", resetUpload);
+function showIdle(m){
+  document.getElementById("msg").textContent = m||"";
+  document.getElementById("result").innerHTML = `<section class="card"><div class="empty"><b>Belum ada data.</b> Upload 4 file CSV hasil <span class="mono">bulk_query_aplikasi.py</span> di kotak Sumber data, lalu ketik nomor aplikasi dan klik Cari.</div></section>`;
+}
+showIdle();
+</script>
+
+</body>
+</html>
